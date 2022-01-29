@@ -1,8 +1,10 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Text, Alert } from "react-native";
 import { Card, TextInput, Button } from "react-native-paper";
 import Header from "./Header";
+import textValidation from "../validations/text-validation";
+import * as services from '../services/empresas-services';
 
 export default function EmpresasCadastro({ navigation }) {
 
@@ -16,7 +18,22 @@ export default function EmpresasCadastro({ navigation }) {
     } = useForm();
 
     const onSubmit = (data) => {
-        console.log(data);
+
+        services.postEmpresa(data)
+            .then(
+                result => {
+
+                    reset({ nomeFantasia: '', razaoSocial: '', cnpj: '', telefone: '' });
+
+                    Alert.alert('Operação realizada com sucesso!', result.message);
+                }
+            )
+            .catch(
+                e => {
+                    console.log(e.response);
+                    Alert.alert('Erro!', 'Não foi possível realizar a operação.');
+                }
+            )
     }
 
     return (
@@ -34,6 +51,9 @@ export default function EmpresasCadastro({ navigation }) {
                         <Controller
                             control={control}
                             name='nomeFantasia'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -50,6 +70,16 @@ export default function EmpresasCadastro({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.nomeFantasia && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.nomeFantasia.message}
+                            </Text>
+                        }
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -57,6 +87,9 @@ export default function EmpresasCadastro({ navigation }) {
                         <Controller
                             control={control}
                             name='razaoSocial'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -73,6 +106,16 @@ export default function EmpresasCadastro({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.razaoSocial && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.razaoSocial.message}
+                            </Text>
+                        }
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -80,6 +123,9 @@ export default function EmpresasCadastro({ navigation }) {
                         <Controller
                             control={control}
                             name='cnpj'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -96,6 +142,16 @@ export default function EmpresasCadastro({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.cnpj && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.cnpj.message}
+                            </Text>
+                        }
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -103,6 +159,9 @@ export default function EmpresasCadastro({ navigation }) {
                         <Controller
                             control={control}
                             name='telefone'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -118,6 +177,16 @@ export default function EmpresasCadastro({ navigation }) {
                                 )
                             }
                         />
+
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.telefone && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.telefone.message}
+                            </Text>
+                        }
 
                     </View>
 

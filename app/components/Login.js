@@ -1,8 +1,11 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { ScrollView, View, Text } from "react-native";
+import { ScrollView, View, Text, Alert } from "react-native";
 import { Card, TextInput, Button } from "react-native-paper";
 import Header from "./Header";
+import textValidation from "../validations/text-validation";
+import * as services from '../services/login-services';
+import * as helpers from '../helpers/auth-helpers';
 
 export default function Login({ navigation }) {
 
@@ -16,7 +19,32 @@ export default function Login({ navigation }) {
     } = useForm();
 
     const onSubmit = (data) => {
+
         console.log(data);
+
+        services.postLogin(data)
+            .then(
+                result => {
+
+                    //limpar os campos
+                    reset({ login: '', senha : '' });
+
+                    //exibindo mensagem
+                    Alert.alert('Seja bem vindo!', result.mensagem);
+
+                    //salvando o token na AsyncStorage
+                    helpers.signIn(result.accessToken);
+
+                    //redirecionando
+                    navigation.navigate('dashboard');
+                }
+            )
+            .catch(
+                e => {
+                    Alert.alert('Não autorizado', 'Acesso negado, por favor verifique seu login e senha.');
+                    console.log(e.response);
+                }
+            )
     }
 
     return (
@@ -40,6 +68,9 @@ export default function Login({ navigation }) {
                         <Controller
                             control={control}
                             name='login'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -56,6 +87,16 @@ export default function Login({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.login && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.login.message}
+                            </Text>
+                        }
+
                     </View>
 
                     {/* campo para preenchimento da senha do usuário */}
@@ -64,6 +105,9 @@ export default function Login({ navigation }) {
                         <Controller
                             control={control}
                             name='senha'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -80,6 +124,16 @@ export default function Login({ navigation }) {
                                 )
                             }
                         />
+
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.senha && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.senha.message}
+                            </Text>
+                        }
 
                     </View>
 

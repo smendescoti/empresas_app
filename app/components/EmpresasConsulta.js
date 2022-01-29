@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import { Card, TextInput, Button } from "react-native-paper";
 import Header from "./Header";
+import textValidation from "../validations/text-validation";
+import * as services from '../services/empresas-services';
 
 export default function EmpresasConsulta({ navigation }) {
+
+    const [mensagem, setMensagem] = useState('');
+    const [empresas, setEmpresas] = useState([]);
 
     const {
         control,
@@ -16,7 +21,59 @@ export default function EmpresasConsulta({ navigation }) {
     } = useForm();
 
     const onSubmit = (data) => {
-        console.log(data);
+
+        services.getEmpresaByNomeFantasia(data.pesquisa)
+            .then(
+                result => {
+                    //armazenando os dados das empresas obtidas
+                    setEmpresas(result);
+
+                    if (result.length == 0) {
+                        setMensagem('Nenhuma empresa foi encontrada para o filtro especificado.');
+                    }
+                    else {
+                        setMensagem('Foram encontrados ' + result.length + ' empresas para o filtro especificado.');
+                    }
+                }
+            )
+            .catch(
+                e => {
+                    console.log(e.response);
+                    Alert.alert('Erro!', 'Operação não pôde ser realizada.');
+                }
+            )
+    }
+
+    //função para realizar a exclusão da empresa
+    const excluir = (idEmpresa) => {
+        Alert.alert(
+            'Exclusão de Empresa',
+            'Deseja realmente excluir a empresa selecionada?',
+            [
+                {
+                    text: 'Confirmar',
+                    onPress: () => {
+                        services.deleteEmpresa(idEmpresa)
+                            .then(
+                                result => {
+                                    Alert.alert('Operação realizada com sucesso!', result.message);
+                                    setEmpresas([]);
+                                    setMensagem('');
+                                    reset({ pesquisa: '' });
+                                }
+                            )
+                            .catch(
+                                e => {
+                                    Alert.alert('Erro!', 'Operação não pôde ser realizada.');
+                                }
+                            )
+                    }
+                },
+                {
+                    text: 'Cancelar'
+                }
+            ]
+        )
     }
 
     return (
@@ -34,6 +91,9 @@ export default function EmpresasConsulta({ navigation }) {
                         <Controller
                             control={control}
                             name='pesquisa'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -49,6 +109,16 @@ export default function EmpresasConsulta({ navigation }) {
                                 )
                             }
                         />
+
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.pesquisa && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.pesquisa.message}
+                            </Text>
+                        }
 
                     </View>
 
@@ -73,40 +143,65 @@ export default function EmpresasConsulta({ navigation }) {
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
+                        {
+                            mensagem.length > 0 && <Text style={{
+                                fontWeight: 'bold',
+                                fontSize: 15
+                            }}>
+                                {mensagem}
+                            </Text>
+                        }
+                    </View>
 
-                        <Card>
-                            <Card.Content>
-                                <View>
-                                    <Text style={{
-                                        fontWeight: 'bold', fontSize: 16
-                                    }}>
-                                        Empresa Modelo LTDA
-                                    </Text>
-                                </View>
-                                <View>
-                                    <Text>
-                                        Razão Social: Empresa Modelo LTDA RJ
-                                    </Text>
-                                    <Text>
-                                        CNPJ: 28.364.665/0001-01
-                                    </Text>
-                                    <Text>
-                                        Telefone: (21) 99999-9999
-                                    </Text>
-                                </View>
-                            </Card.Content>
-                            <Card.Actions>
-                                <Button icon="pencil-outline" mode="text"
-                                    onPress={
-                                        () => navigation.navigate('empresas-edicao')
-                                    }>
-                                    Editar
-                                </Button>
-                                <Button icon="delete-outline" mode="text">
-                                    Excluir
-                                </Button>
-                            </Card.Actions>
-                        </Card>
+                    <View style={{ marginBottom: 20 }}>
+
+                        {
+                            empresas.map(
+                                function (empresa, i) {
+                                    return (
+                                        <Card key={i}>
+                                            <Card.Content>
+                                                <View>
+                                                    <Text style={{
+                                                        fontWeight: 'bold', fontSize: 16
+                                                    }}>
+                                                        {empresa.nomeFantasia}
+                                                    </Text>
+                                                </View>
+                                                <View>
+                                                    <Text>
+                                                        Razão Social: {empresa.razaoSocial}
+                                                    </Text>
+                                                    <Text>
+                                                        CNPJ: {empresa.cnpj}
+                                                    </Text>
+                                                    <Text>
+                                                        Telefone: {empresa.telefone}
+                                                    </Text>
+                                                </View>
+                                            </Card.Content>
+                                            <Card.Actions>
+                                                <Button icon="pencil-outline" mode="text"
+                                                    onPress={
+                                                        () => navigation.navigate('empresas-edicao',
+                                                            {
+                                                                idEmpresa: empresa.idEmpresa
+                                                            })
+                                                    }>
+                                                    Editar
+                                                </Button>
+                                                <Button icon="delete-outline" mode="text"
+                                                    onPress={
+                                                        () => excluir(empresa.idEmpresa)
+                                                    }>
+                                                    Excluir
+                                                </Button>
+                                            </Card.Actions>
+                                        </Card>
+                                    )
+                                }
+                            )
+                        }
 
                     </View>
 

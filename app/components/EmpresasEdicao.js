@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Text, Alert } from "react-native";
 import { Card, TextInput, Button } from "react-native-paper";
 import Header from "./Header";
+import textValidation from "../validations/text-validation";
+import * as services from '../services/empresas-services';
 
-export default function EmpresasEdicao({ navigation }) {
+export default function EmpresasEdicao({ route, navigation }) {
+
+    //capturando o id da empresa enviado pela tela consulta
+    const { idEmpresa } = route.params;
 
     const {
         control,
@@ -16,8 +21,47 @@ export default function EmpresasEdicao({ navigation }) {
     } = useForm();
 
     const onSubmit = (data) => {
-        console.log(data);
+
+        services.putEmpresa(data)
+            .then(
+                result => {
+                    Alert.alert('Operação realizada com sucesso', result.message);
+                }
+            )
+            .catch(
+                e => {
+                    Alert.alert('Erro', 'Operação não pôde ser realizada.');
+                }
+            )
     }
+
+    const obterEmpresa = (idEmpresa) => {
+        services.getEmpresaById(idEmpresa)
+            .then(
+                result => {
+                    //preenchendo o formulário com os dados da empresa
+                    reset({
+                        idEmpresa: result.idEmpresa,
+                        nomeFantasia: result.nomeFantasia,
+                        razaoSocial: result.razaoSocial,
+                        cnpj: result.cnpj,
+                        telefone: result.telefone
+                    })
+                }
+            )
+            .catch(
+                e => {
+                    console.log(e);
+                }
+            )
+    }
+
+    //Função executada quando o componente é carregado
+    useEffect(
+        () => {
+            obterEmpresa(idEmpresa);
+        }, []
+    );
 
     return (
         <ScrollView style={{ backgroundColor: '#FFF' }}>
@@ -34,6 +78,9 @@ export default function EmpresasEdicao({ navigation }) {
                         <Controller
                             control={control}
                             name='nomeFantasia'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -50,6 +97,16 @@ export default function EmpresasEdicao({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.nomeFantasia && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.nomeFantasia.message}
+                            </Text>
+                        }
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -57,6 +114,9 @@ export default function EmpresasEdicao({ navigation }) {
                         <Controller
                             control={control}
                             name='razaoSocial'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -73,6 +133,17 @@ export default function EmpresasEdicao({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.razaoSocial && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.razaoSocial.message}
+                            </Text>
+                        }
+
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -80,6 +151,9 @@ export default function EmpresasEdicao({ navigation }) {
                         <Controller
                             control={control}
                             name='cnpj'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -96,6 +170,17 @@ export default function EmpresasEdicao({ navigation }) {
                             }
                         />
 
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.cnpj && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.cnpj.message}
+                            </Text>
+                        }
+
+
                     </View>
 
                     <View style={{ marginBottom: 20 }}>
@@ -103,6 +188,9 @@ export default function EmpresasEdicao({ navigation }) {
                         <Controller
                             control={control}
                             name='telefone'
+                            rules={{
+                                validate: textValidation
+                            }}
                             defaultValue=''
                             render={
                                 ({ field: { onChange, onBlur, value } }) => (
@@ -118,6 +206,17 @@ export default function EmpresasEdicao({ navigation }) {
                                 )
                             }
                         />
+
+                        {/* mensagem de erro de validação */}
+                        {
+                            errors.telefone && <Text style={{
+                                color: '#BB2124',
+                                fontSize: 15
+                            }}>
+                                {errors.telefone.message}
+                            </Text>
+                        }
+
 
                     </View>
 
