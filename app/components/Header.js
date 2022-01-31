@@ -1,10 +1,40 @@
-import React, { useState } from "react";
-import { View, Text } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Alert } from "react-native";
 import { Appbar, Modal, Portal, Button } from "react-native-paper";
+import * as helpers from '../helpers/auth-helpers';
 
 export default function Header({ navigation }) {
 
     const [exibirModal, setExibirModal] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    //função para verificar se o usuário está autenticado
+    const verificarAutenticacao = () => {
+        helpers.getAccessToken()
+            .then(
+                token => {
+                    setIsLoggedIn(token != null && token != '');
+                }
+            )
+    }
+
+    //função para realizar o logout
+    const logout = () => {
+        helpers.signOut();
+        navigation.navigate('login')
+    }
+
+    //funçao do REACT HOOKS executada
+    //sempre que o componente é carregado
+    useEffect(
+        () => {
+            verificarAutenticacao();
+            const unsubscrible = navigation.addListener('focus', () => {
+                verificarAutenticacao();
+            });
+            return unsubscrible;
+        }, [navigation]
+    )
 
     return (
         <View>
@@ -21,30 +51,44 @@ export default function Header({ navigation }) {
                         fontSize: 14
                     }}
                 />
-                <Appbar.Action
-                    icon="home-outline"
-                    onPress={
-                        () => navigation.navigate('login')
-                    }
-                />
-                <Appbar.Action
-                    icon="chart-pie"
-                    onPress={
-                        () => navigation.navigate('dashboard')
-                    }
-                />
-                <Appbar.Action
-                    icon="office-building"
-                    onPress={
-                        () => navigation.navigate('empresas-consulta')
-                    }
-                />
-                <Appbar.Action
-                    icon="account-circle-outline"
-                    onPress={
-                        () => setExibirModal(true)
-                    }
-                />
+
+                {
+                    !isLoggedIn && <Appbar.Action
+                        icon="home-outline"
+                        onPress={
+                            () => navigation.navigate('login')
+                        }
+                    />
+                }
+
+                {
+                    isLoggedIn && <Appbar.Action
+                        icon="chart-pie"
+                        onPress={
+                            () => navigation.navigate('dashboard')
+                        }
+                    />
+                }
+
+                {
+                    isLoggedIn && <Appbar.Action
+                        icon="office-building"
+                        onPress={
+                            () => navigation.navigate('empresas-consulta')
+                        }
+                    />
+                }
+
+                {
+                    isLoggedIn && <Appbar.Action
+                        icon="account-circle-outline"
+                        onPress={
+                            () => setExibirModal(true)
+                        }
+                    />
+
+                }
+
             </Appbar.Header>
 
             {/* janela modal */}
@@ -69,7 +113,14 @@ export default function Header({ navigation }) {
                         <Text style={{ fontSize: 18, marginBottom: 20 }}>
                             administrador@gmail.com
                         </Text>
-                        <Button mode="outlined" onPress={() => setExibirModal(false)}>
+                        <Button mode="outlined"
+                            style={{ marginBottom: 20 }}
+                            onPress={() => logout()}>
+                            Encerrar Sessão
+                        </Button>
+                        <Button mode="outlined"
+                            style={{ marginBottom: 20 }}
+                            onPress={() => setExibirModal(false)}>
                             Fechar
                         </Button>
                     </View>
